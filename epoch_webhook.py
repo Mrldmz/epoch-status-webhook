@@ -127,7 +127,7 @@ def should_send():
                     if 'up' in div_content:
                         current_auth = "UP"
                     elif 'down' in div_content:
-                        current_auth = "DOWN"
+                        current_auth = "UP"  # Testing: treat DOWN as UP
         
         # Parse Kezan Server status using div ID
         kezan_div_start = page_content.find(f'id="{KEZAN_STATUS}"')
@@ -141,7 +141,7 @@ def should_send():
                     if 'up' in div_content:
                         current_kezan = "UP"
                     elif 'down' in div_content:
-                        current_kezan = "DOWN"
+                        current_kezan = "UP"  # Testing: treat DOWN as UP
         
         print(f"🔍 Current status - Auth: {current_auth}, Kezan: {current_kezan}")
         
@@ -153,8 +153,8 @@ def should_send():
         # Initialize previous values if they're None
         if status_data["previous_auth"] is None or status_data["previous_kezan"] is None:
             print("📝 Initializing status tracking...")
-            status_data["previous_auth"] = current_auth
-            status_data["previous_kezan"] = current_kezan
+            status_data["previous_auth"] = "DOWN"  # Testing: initialize as DOWN to trigger change
+            status_data["previous_kezan"] = "DOWN"  # Testing: initialize as DOWN to trigger change
             return False
         
         # Check for status change with different conditions for UP vs DOWN

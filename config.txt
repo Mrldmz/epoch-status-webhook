@@ -1,2 +1,0 @@
-webhook_url=https://discord.com/api/webhooks/1234/asd
-role_id=123

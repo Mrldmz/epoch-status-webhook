@@ -10,13 +10,16 @@ Local webhook monitor for Discord that sends status updates for the Project Epoc
    - Create a new webhook and copy the URL
 
 2. **Configure the script:**
-   - Edit `webhook.txt` and replace the placeholder with your Discord webhook URL
-   - Edit `role-id.txt` and replace the placeholder with your Discord role ID (optional)
+   - Edit `config.txt` and set your webhook URL and role ID:
+     ```
+     webhook_url=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
+     role_id=1234567890123456789
+     ```
 
 3. **Get Discord Role ID (optional, for @role mentions):**
    - Enable Developer Mode in Discord (User Settings → Advanced → Developer Mode)
    - Right-click on the role you want to mention (e.g., @Epoch)
-   - Click "Copy ID" and paste it in `role-id.txt`
+   - Click "Copy ID" and paste it after `role_id=` in config.txt
 
 4. **Run the monitor:**
    - Double-click `run.bat` to start (creates virtual environment and installs dependencies automatically)
@@ -25,10 +28,7 @@ Local webhook monitor for Discord that sends status updates for the Project Epoc
 ## Files
 
 - `epoch_webhook.py` - Main monitoring script
-- `webhook.txt` - Contains your Discord webhook URL (create from webhook.txt.template)
-- `webhook.txt.template` - Template for webhook configuration
-- `role-id.txt` - Contains Discord role ID for mentions (create from role-id.txt.template)
-- `role-id.txt.template` - Template for role ID configuration
+- `config.txt` - Configuration file with webhook URL and role ID
 - `run.bat` - Easy launcher that creates venv, installs dependencies and runs the script
 - `clean.bat` - Removes the virtual environment folder
 - `requirements.txt` - Python dependencies

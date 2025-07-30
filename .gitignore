@@ -47,9 +47,8 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Configuration files (keep template, ignore actual webhook URL)
-webhook.txt
-role-id.txt
+# Configuration files
+# config.txt
 
 # App files (shown while running)
 app.py

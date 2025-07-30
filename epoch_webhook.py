@@ -71,7 +71,7 @@ def send_discord_webhook(message, webhook_url, username="Epoch Status Bot", colo
         
         payload = {
             "username": username,
-            "content": "<@&Epoch>",  # Mention @Epoch role
+            "content": "<@&1400000261086249032>",  # Replace with actual Epoch role ID
             "embeds": [embed]
         }
         

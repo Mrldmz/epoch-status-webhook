@@ -15,6 +15,7 @@ import traceback
 
 # Configuration
 WEBHOOK_FILE = 'webhook.txt'
+ROLE_ID_FILE = 'role-id.txt'
 CHECK_INTERVAL = 30  # seconds between checks
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
@@ -55,6 +56,29 @@ def read_webhook_url():
         print(f"❌ Error reading {WEBHOOK_FILE}: {e}")
         return None
 
+def read_role_id():
+    """Read Discord role ID from role-id.txt file"""
+    try:
+        if not os.path.exists(ROLE_ID_FILE):
+            print(f"⚠️  Warning: {ROLE_ID_FILE} not found! Role mentions will be disabled.")
+            return None
+        
+        with open(ROLE_ID_FILE, 'r', encoding='utf-8') as f:
+            role_id = f.read().strip()
+            
+        if not role_id:
+            print(f"⚠️  Warning: {ROLE_ID_FILE} is empty! Role mentions will be disabled.")
+            return None
+            
+        if not role_id.isdigit():
+            print(f"⚠️  Warning: Invalid role ID in {ROLE_ID_FILE}! Should be numbers only.")
+            return None
+            
+        return role_id
+    except Exception as e:
+        print(f"⚠️  Warning: Error reading {ROLE_ID_FILE}: {e}. Role mentions will be disabled.")
+        return None
+
 def send_discord_webhook(message, webhook_url, username="Epoch Status Bot", color=0x00ff00):
     """Send message to Discord via webhook"""
     try:
@@ -69,11 +93,17 @@ def send_discord_webhook(message, webhook_url, username="Epoch Status Bot", colo
             }
         }
         
+        # Read role ID for mentions
+        role_id = read_role_id()
+        
         payload = {
             "username": username,
-            "content": "<@&Epoch>",  # Mention @Epoch role
             "embeds": [embed]
         }
+        
+        # Add role mention if role ID is available
+        if role_id:
+            payload["content"] = f"<@&{role_id}>"
         
         for attempt in range(MAX_RETRIES):
             try:

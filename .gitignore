@@ -49,6 +49,7 @@ coverage.xml
 
 # Configuration files (keep template, ignore actual webhook URL)
 webhook.txt
+role-id.txt
 
 # Logs
 *.log

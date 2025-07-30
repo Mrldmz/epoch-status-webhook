@@ -11,10 +11,14 @@ Local webhook monitor for Discord that sends status updates based on custom cond
 
 2. **Configure the script:**
    - Edit `webhook.txt` and replace the placeholder with your Discord webhook URL
-   - Edit the `should_send()` function in `epoch_webhook.py` to implement your condition logic
-   - Customize the `get_webhook_message()` function for your message content
+   - Edit `role-id.txt` and replace the placeholder with your Discord role ID (optional)
 
-3. **Run the monitor:**
+3. **Get Discord Role ID (optional, for @role mentions):**
+   - Enable Developer Mode in Discord (User Settings → Advanced → Developer Mode)
+   - Right-click on the role you want to mention (e.g., @Epoch)
+   - Click "Copy ID" and paste it in `role-id.txt`
+
+4. **Run the monitor:**
    - Double-click `run.bat` to start (creates virtual environment and installs dependencies automatically)
    - Or run manually with venv: `venv\Scripts\activate && python epoch_webhook.py`
 
@@ -23,44 +27,22 @@ Local webhook monitor for Discord that sends status updates based on custom cond
 - `epoch_webhook.py` - Main monitoring script
 - `webhook.txt` - Contains your Discord webhook URL (create from webhook.txt.template)
 - `webhook.txt.template` - Template for webhook configuration
+- `role-id.txt` - Contains Discord role ID for mentions (create from role-id.txt.template)
+- `role-id.txt.template` - Template for role ID configuration
 - `run.bat` - Easy launcher that creates venv, installs dependencies and runs the script
 - `clean.bat` - Removes the virtual environment folder
 - `requirements.txt` - Python dependencies
 - `venv/` - Python virtual environment (created automatically)
 
-## Customization
-
-### Implementing your condition logic
-
-Edit the `should_send()` function in `epoch_webhook.py`:
-
-```python
-def should_send():
-    # Example: Check website status
-    try:
-        response = requests.get('https://epoch.strykersoft.us/', timeout=5)
-        return response.status_code != 200  # Send if site is down
-    except:
-        return True  # Send if can't reach site
-```
-
-### Customizing messages
-
-Edit the `get_webhook_message()` function:
-
-```python
-def get_webhook_message():
-    return "Custom status message here!"
-```
-
 ## Features
 
-- ✅ Continuous monitoring loop
+- ✅ Monitors Epoch server status changes automatically
 - ✅ Discord webhook integration with rich embeds
+- ✅ Optional role mentions for notifications
 - ✅ Automatic retry on failure
-- ✅ Startup/shutdown notifications
 - ✅ Error handling and logging
-- ✅ Easy to customize and extend
+- ✅ Virtual environment setup
+- ✅ Easy configuration via text files
 
 ## Disclaimer
 

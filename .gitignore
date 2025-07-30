@@ -30,6 +30,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+epoch-status-webhook.zip
 
 # PyInstaller
 *.manifest

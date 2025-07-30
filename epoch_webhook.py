@@ -14,7 +14,7 @@ from datetime import datetime
 import traceback
 
 # Configuration
-WEBHOOK_FILE = 'webhook.txt'
+CONFIG_FILE = 'config.txt'
 CHECK_INTERVAL = 30  # seconds between checks
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
@@ -30,32 +30,49 @@ status_data = {
 
 current_message_content = ""
 
-def read_webhook_url():
-    """Read Discord webhook URL from webhook.txt file"""
+def read_config():
+    """Read configuration from config.txt file"""
     try:
-        if not os.path.exists(WEBHOOK_FILE):
-            print(f"❌ Error: {WEBHOOK_FILE} not found!")
-            print(f"Please create {WEBHOOK_FILE} and put your Discord webhook URL inside.")
-            return None
+        if not os.path.exists(CONFIG_FILE):
+            print(f"❌ Error: {CONFIG_FILE} not found!")
+            print(f"Please create {CONFIG_FILE} and configure your webhook URL and role ID.")
+            return None, None
         
-        with open(WEBHOOK_FILE, 'r', encoding='utf-8') as f:
-            url = f.read().strip()
+        webhook_url = None
+        role_id = None
+        
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('webhook_url='):
+                    webhook_url = line.split('=', 1)[1].strip()
+                elif line.startswith('role_id='):
+                    role_id = line.split('=', 1)[1].strip()
+        
+        # Validate webhook URL
+        if not webhook_url:
+            print(f"❌ Error: webhook_url is empty in {CONFIG_FILE}!")
+            return None, None
             
-        if not url:
-            print(f"❌ Error: {WEBHOOK_FILE} is empty!")
-            return None
-            
-        if not url.startswith('https://discord.com/api/webhooks/'):
-            print(f"❌ Error: Invalid Discord webhook URL in {WEBHOOK_FILE}")
+        if not webhook_url.startswith('https://discord.com/api/webhooks/'):
+            print(f"❌ Error: Invalid Discord webhook URL in {CONFIG_FILE}")
             print("URL should start with: https://discord.com/api/webhooks/")
-            return None
+            return None, None
+        
+        # Validate role ID (optional)
+        if role_id and not role_id.isdigit():
+            print(f"⚠️  Warning: Invalid role ID in {CONFIG_FILE}! Should be numbers only. Role mentions will be disabled.")
+            role_id = None
+        
+        if not role_id:
+            print(f"⚠️  Warning: role_id is empty in {CONFIG_FILE}. Role mentions will be disabled.")
             
-        return url
+        return webhook_url, role_id
     except Exception as e:
-        print(f"❌ Error reading {WEBHOOK_FILE}: {e}")
-        return None
+        print(f"❌ Error reading {CONFIG_FILE}: {e}")
+        return None, None
 
-def send_discord_webhook(message, webhook_url, username="Epoch Status Bot", color=0x00ff00):
+def send_discord_webhook(message, webhook_url, role_id=None, username="Epoch Status Bot", color=0x00ff00):
     """Send message to Discord via webhook"""
     try:
         embed = {
@@ -71,9 +88,12 @@ def send_discord_webhook(message, webhook_url, username="Epoch Status Bot", colo
         
         payload = {
             "username": username,
-            "content": "<@&1400000261086249032>",  # Replace with actual Epoch role ID
             "embeds": [embed]
         }
+        
+        # Add role mention if role ID is available
+        if role_id:
+            payload["content"] = f"<@&{role_id}>"
         
         for attempt in range(MAX_RETRIES):
             try:
@@ -225,17 +245,22 @@ def main():
     print("🚀 Epoch Status Webhook Monitor Starting...")
     print("=" * 50)
     
-    # Check if webhook URL is configured
-    webhook_url = read_webhook_url()
+    # Check if configuration is set up
+    webhook_url, role_id = read_config()
     if not webhook_url:
         print("\n📝 Setup Instructions:")
-        print(f"1. Create a file named '{WEBHOOK_FILE}' in this directory")
-        print("2. Put your Discord webhook URL inside the file")
+        print(f"1. Create a file named '{CONFIG_FILE}' in this directory")
+        print("2. Add your Discord webhook URL and role ID in this format:")
+        print("   webhook_url=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN")
+        print("   role_id=1234567890123456789")
         print("3. Run this script again")
         print("\n💡 To get a Discord webhook URL:")
         print("   - Go to your Discord server")
         print("   - Edit a channel → Integrations → Webhooks")
         print("   - Create a new webhook and copy the URL")
+        print("\n💡 To get a Discord role ID (optional):")
+        print("   - Enable Developer Mode in Discord")
+        print("   - Right-click on the role and copy ID")
         input("\nPress Enter to exit...")
         return
     
@@ -256,7 +281,7 @@ def main():
                 # Check if we should send a webhook
                 if should_send():
                     message = get_webhook_message()
-                    send_discord_webhook(message, webhook_url)
+                    send_discord_webhook(message, webhook_url, role_id)
             
             except Exception as e:
                 print(f"❌ Error during check: {e}")

@@ -157,21 +157,36 @@ def should_send():
             status_data["previous_kezan"] = current_kezan
             return False
         
-        # Check for status change: both servers changed AND both have same current status
+        # Check for status change with different conditions for UP vs DOWN
         auth_changed = current_auth != status_data["previous_auth"]
         kezan_changed = current_kezan != status_data["previous_kezan"]
-        both_equal = current_auth == current_kezan
         
-        should_notify = auth_changed and kezan_changed and both_equal
+        should_notify = False
+        
+        if current_auth == "UP" and current_kezan == "UP":
+            # For UP status: both servers must be UP AND both must have changed
+            should_notify = auth_changed and kezan_changed
+        else:
+            # For DOWN status: either server went DOWN from previously being UP
+            auth_went_down = (status_data["previous_auth"] == "UP" and current_auth == "DOWN")
+            kezan_went_down = (status_data["previous_kezan"] == "UP" and current_kezan == "DOWN")
+            should_notify = auth_went_down or kezan_went_down
         
         if should_notify:
             # Prepare message content based on current status
-            if current_auth == "UP":
+            if current_auth == "UP" and current_kezan == "UP":
                 current_message_content = "✅ Both Epoch servers are UP"
             else:
-                current_message_content = "❌ Both Epoch servers are DOWN"
+                if current_auth == "DOWN" and current_kezan == "DOWN":
+                    current_message_content = "❌ Both Epoch servers are DOWN"
+                elif current_auth == "DOWN":
+                    current_message_content = "❌ Auth Server is DOWN"
+                elif current_kezan == "DOWN":
+                    current_message_content = "❌ Kezan Server is DOWN"
+                else:
+                    current_message_content = "⚠️ Server status changed"
             
-            print(f"🚨 Status change detected! Both servers: {current_auth}")
+            print(f"🚨 Status change detected! Auth: {current_auth}, Kezan: {current_kezan}")
         
         # Update stored values regardless of outcome
         status_data["previous_auth"] = current_auth

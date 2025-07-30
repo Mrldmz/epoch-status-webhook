@@ -10,6 +10,7 @@ Local webhook monitor for Discord that sends status updates for the Project Epoc
    - Create a new webhook and copy the URL
 
 2. **Configure the script:**
+   - Rename `example-config.txt` to `config.txt`
    - Edit `config.txt` and set your webhook URL and role ID:
      ```
      webhook_url=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
@@ -28,7 +29,8 @@ Local webhook monitor for Discord that sends status updates for the Project Epoc
 ## Files
 
 - `epoch_webhook.py` - Main monitoring script
-- `config.txt` - Configuration file with webhook URL and role ID
+- `example-config.txt` - Template configuration file (rename to config.txt)
+- `config.txt` - Your actual configuration file (created from example-config.txt)
 - `run.bat` - Easy launcher that creates venv, installs dependencies and runs the script
 - `clean.bat` - Removes the virtual environment folder
 - `requirements.txt` - Python dependencies

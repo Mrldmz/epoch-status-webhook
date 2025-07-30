@@ -48,7 +48,7 @@ coverage.xml
 .pytest_cache/
 
 # Configuration files
-# config.txt
+config.txt
 
 # App files (shown while running)
 app.py

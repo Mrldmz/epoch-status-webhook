@@ -51,5 +51,9 @@ coverage.xml
 webhook.txt
 role-id.txt
 
+# App files (shown while running)
+app.py
+templates/base.html
+
 # Logs
 *.log

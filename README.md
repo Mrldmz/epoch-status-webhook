@@ -1,6 +1,6 @@
 # epoch-status-webhook
 
-Local webhook monitor for Discord that sends status updates based on custom conditions.
+Local webhook monitor for Discord that sends status updates for the Project Epoch servers (particularly Kezan and Auth) based on the status shown on [Epoch Status](https://epoch.strykersoft.us/).
 
 ## Quick Start
 
@@ -46,5 +46,5 @@ Local webhook monitor for Discord that sends status updates based on custom cond
 
 ## Disclaimer
 
-- Not affiliated with the user [@stryker2k2](https://www.reddit.com/user/stryker2k2/)
+- Not affiliated with [@stryker2k2](https://www.reddit.com/user/stryker2k2/), the author of [Epoch Status](https://epoch.strykersoft.us/)
 - Not affiliated with [Project Epoch](https://www.project-epoch.net/)

@@ -116,7 +116,7 @@ def should_send():
     # Check time-based condition:
     # return datetime.now().minute == 0  # Send every hour
     
-    return False
+    return True  # Placeholder, always returns True for testing
 
 def get_webhook_message():
     """
@@ -166,10 +166,6 @@ def main():
     print("⏹️  Press Ctrl+C to stop monitoring")
     print("-" * 50)
     
-    # Send startup notification
-    startup_message = "🟢 Epoch Status Monitor started and ready!"
-    send_discord_webhook(startup_message, webhook_url, color=0x00ff00)
-    
     try:
         check_count = 0
         while True:
@@ -181,10 +177,6 @@ def main():
                 if should_send():
                     message = get_webhook_message()
                     send_discord_webhook(message, webhook_url)
-                else:
-                    # Print a periodic "still running" message
-                    if check_count % 20 == 0:  # Every 20 checks (10 minutes with 30s interval)
-                        print(f"🔄 [{current_time}] Still monitoring... (Check #{check_count})")
             
             except Exception as e:
                 print(f"❌ Error during check: {e}")
@@ -195,21 +187,11 @@ def main():
             
     except KeyboardInterrupt:
         print("\n\n⏹️  Stopping monitor...")
-        
-        # Send shutdown notification
-        shutdown_message = "🔴 Epoch Status Monitor stopped."
-        send_discord_webhook(shutdown_message, webhook_url, color=0xff0000)
-        
         print("👋 Monitor stopped successfully!")
         
     except Exception as e:
         print(f"\n❌ Unexpected error: {e}")
         traceback.print_exc()
-        
-        # Send error notification
-        error_message = f"💥 Monitor crashed: {str(e)}"
-        send_discord_webhook(error_message, webhook_url, color=0xff0000)
-        
         input("Press Enter to exit...")
 
 if __name__ == '__main__':

@@ -18,6 +18,17 @@ WEBHOOK_FILE = 'webhook.txt'
 CHECK_INTERVAL = 30  # seconds between checks
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
+EPOCH_STATUS_URL = 'https://epoch.strykersoft.us/'
+AUTH_STATUS = 'Auth Server'
+KEZAN_STATUS = 'Kezan (PvE)'
+
+# Status Data
+status_data = {
+    "previous_auth": None,
+    "previous_kezan": None
+}
+
+current_message_content = ""
 
 def read_webhook_url():
     """Read Discord webhook URL from webhook.txt file"""
@@ -60,6 +71,7 @@ def send_discord_webhook(message, webhook_url, username="Epoch Status Bot", colo
         
         payload = {
             "username": username,
+            "content": "<@&Epoch>",  # Mention @Epoch role
             "embeds": [embed]
         }
         
@@ -85,58 +97,111 @@ def send_discord_webhook(message, webhook_url, username="Epoch Status Bot", colo
 
 def should_send():
     """
-    TODO: Implement your condition logic here.
-    
-    This function should return True when you want to send a webhook message.
-    Examples of what you might check:
-    - Website status changes
-    - File modifications
-    - API responses
-    - Time-based conditions
-    - External service status
+    Check Epoch status page for server status changes.
+    Returns True when both Auth and Kezan servers change status and are equal.
     
     Returns:
         bool: True if a webhook should be sent, False otherwise
     """
-    # TODO: Replace this with your actual condition logic
-    # For now, this is just a placeholder that returns False
-    # 
-    # Example implementations:
-    #
-    # Check if a specific file was modified:
-    # return os.path.getmtime('some_file.txt') > last_check_time
-    #
-    # Check website status:
-    # try:
-    #     response = requests.get('https://epoch.strykersoft.us/', timeout=5)
-    #     return response.status_code == 200
-    # except:
-    #     return False
-    #
-    # Check time-based condition:
-    # return datetime.now().minute == 0  # Send every hour
+    global status_data, current_message_content
     
-    return True  # Placeholder, always returns True for testing
+    try:
+        # Fetch the status page
+        response = requests.get(EPOCH_STATUS_URL, timeout=10)
+        response.raise_for_status()
+        page_content = response.text
+        
+        # Extract current status for Auth and Kezan servers
+        current_auth = None
+        current_kezan = None
+        
+        # Parse Auth Server status using div ID
+        auth_div_start = page_content.find(f'id="{AUTH_STATUS}"')
+        if auth_div_start != -1:
+            # Find the content within this div
+            div_start = page_content.find('>', auth_div_start)
+            if div_start != -1:
+                div_end = page_content.find('</div>', div_start)
+                if div_end != -1:
+                    div_content = page_content[div_start + 1:div_end].strip().lower()
+                    if 'up' in div_content:
+                        current_auth = "UP"
+                    elif 'down' in div_content:
+                        current_auth = "DOWN"
+        
+        # Parse Kezan Server status using div ID
+        kezan_div_start = page_content.find(f'id="{KEZAN_STATUS}"')
+        if kezan_div_start != -1:
+            # Find the content within this div
+            div_start = page_content.find('>', kezan_div_start)
+            if div_start != -1:
+                div_end = page_content.find('</div>', div_start)
+                if div_end != -1:
+                    div_content = page_content[div_start + 1:div_end].strip().lower()
+                    if 'up' in div_content:
+                        current_kezan = "UP"
+                    elif 'down' in div_content:
+                        current_kezan = "DOWN"
+        
+        print(f"🔍 Current status - Auth: {current_auth}, Kezan: {current_kezan}")
+        
+        # Check if we could parse both statuses
+        if current_auth is None or current_kezan is None:
+            print("⚠️  Could not parse server status from webpage")
+            return False
+        
+        # Initialize previous values if they're None
+        if status_data["previous_auth"] is None or status_data["previous_kezan"] is None:
+            print("📝 Initializing status tracking...")
+            status_data["previous_auth"] = current_auth
+            status_data["previous_kezan"] = current_kezan
+            return False
+        
+        # Check for status change: both servers changed AND both have same current status
+        auth_changed = current_auth != status_data["previous_auth"]
+        kezan_changed = current_kezan != status_data["previous_kezan"]
+        both_equal = current_auth == current_kezan
+        
+        should_notify = auth_changed and kezan_changed and both_equal
+        
+        if should_notify:
+            # Prepare message content based on current status
+            if current_auth == "UP":
+                current_message_content = "✅ Both Epoch servers are UP"
+            else:
+                current_message_content = "❌ Both Epoch servers are DOWN"
+            
+            print(f"🚨 Status change detected! Both servers: {current_auth}")
+        
+        # Update stored values regardless of outcome
+        status_data["previous_auth"] = current_auth
+        status_data["previous_kezan"] = current_kezan
+        
+        return should_notify
+        
+    except requests.exceptions.RequestException as e:
+        print(f"🌐 Error fetching status page: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Error checking status: {e}")
+        traceback.print_exc()
+        return False
 
 def get_webhook_message():
     """
-    TODO: Customize the message content here.
-    
-    This function should return the message you want to send to Discord.
-    You can make it dynamic based on current conditions.
+    Get the webhook message content from current_message_content variable.
     
     Returns:
-        str: The message to send via webhook
+        str: The message to send via webhook with timestamp
     """
+    global current_message_content
+    
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    # TODO: Customize this message based on your needs
-    message = f"Status update triggered at {timestamp}"
-    
-    # You can make this dynamic, for example:
-    # - Include current status information
-    # - Add relevant data from your checks
-    # - Format based on what triggered the webhook
+    if current_message_content:
+        message = f"{current_message_content}\n\n🕐 Detected at: {timestamp}"
+    else:
+        message = f"Status update triggered at {timestamp}"
     
     return message
 

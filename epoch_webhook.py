@@ -19,6 +19,7 @@ CHECK_INTERVAL = 30  # seconds between checks
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
 EPOCH_STATUS_URL = 'https://epoch.strykersoft.us/'
+# EPOCH_STATUS_URL = 'http://localhost:8000/' # Testing with local server
 AUTH_STATUS = 'Auth Server'
 KEZAN_STATUS = 'Kezan (PvE)'
 
@@ -92,7 +93,7 @@ def send_discord_webhook(message, webhook_url, role_id=None, username="Epoch Sta
         }
         
         # Add role mention if role ID is available
-        if role_id:
+        if role_id and "DOWN" not in message:
             payload["content"] = f"<@&{role_id}>"
         
         for attempt in range(MAX_RETRIES):
@@ -185,7 +186,7 @@ def should_send():
         
         if current_auth == "UP" and current_kezan == "UP":
             # For UP status: both servers must be UP AND both must have changed
-            should_notify = auth_changed and kezan_changed
+            should_notify = auth_changed or kezan_changed
         else:
             # For DOWN status: either server went DOWN from previously being UP
             auth_went_down = (status_data["previous_auth"] == "UP" and current_auth == "DOWN")
@@ -195,10 +196,10 @@ def should_send():
         if should_notify:
             # Prepare message content based on current status
             if current_auth == "UP" and current_kezan == "UP":
-                current_message_content = "✅ Both Epoch servers are UP"
+                current_message_content = "✅ Both Auth and Kezan servers are UP"
             else:
                 if current_auth == "DOWN" and current_kezan == "DOWN":
-                    current_message_content = "❌ Both Epoch servers are DOWN"
+                    current_message_content = "❌ Both Auth and Kezan servers are DOWN"
                 elif current_auth == "DOWN":
                     current_message_content = "❌ Auth Server is DOWN"
                 elif current_kezan == "DOWN":
@@ -267,7 +268,6 @@ def main():
     print(f"✅ Webhook URL loaded successfully")
     print(f"⏱️  Check interval: {CHECK_INTERVAL} seconds")
     print(f"🔄 Starting monitoring loop...")
-    print("📝 Note: Implement your logic in the should_send() function")
     print("⏹️  Press Ctrl+C to stop monitoring")
     print("-" * 50)
     

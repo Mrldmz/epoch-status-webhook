@@ -1,2 +1,3 @@
 webhook_url=
 role_id=
+status_website_url=https://epoch-status.info/

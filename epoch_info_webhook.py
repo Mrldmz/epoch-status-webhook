@@ -2,7 +2,7 @@
 """
 Epoch Status Webhook Monitor
 A simple Python script that monitors for status changes and sends Discord webhooks.
-Double-click this file to start monitoring or run the batch file named run-info.bat.
+Double-click this file to start monitoring or run the batch file named run.bat.
 """
 
 import os

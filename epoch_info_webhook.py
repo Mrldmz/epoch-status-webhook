@@ -118,7 +118,7 @@ def send_discord_webhook(message, webhook_url, role_id=None, username="Epoch Sta
 
 def should_send():
     """
-    Check Epoch status page for server status changes.
+    Check Epoch status page for server status changes using the API.
     Returns True when both Auth and Kezan servers change status and are equal.
     
     Returns:
@@ -127,72 +127,41 @@ def should_send():
     global status_data, current_message_content
     
     try:
-        # Fetch the status page
-        response = requests.get(EPOCH_STATUS_URL, timeout=10)
+        # Use the tRPC API endpoint to get server status
+        api_url = "https://epoch-status.info/api/trpc/post.getStatus,post.getUptimeHistory"
+        params = {
+            "batch": "1",
+            "input": '{"0":{"json":null,"meta":{"values":["undefined"]}},"1":{"json":null,"meta":{"values":["undefined"]}}}'
+        }
+        
+        print(f"🌐 Fetching server status from API...")
+        response = requests.get(api_url, params=params, timeout=10)
         response.raise_for_status()
-        page_content = response.text
         
-        # Extract current status for Auth and Kezan servers
-        current_auth = None
-        current_kezan = None
+        # Parse the JSON response
+        api_data = response.json()
         
-        # First, find the main grid container
-        grid_start = page_content.find('class="mantine-Grid-root"')
-        if grid_start == -1:
-            print("⚠️  Could not find mantine-Grid-root container")
+        # Extract the status data from the first result
+        if (isinstance(api_data, list) and len(api_data) > 0 and 
+            "result" in api_data[0] and "data" in api_data[0]["result"] and 
+            "json" in api_data[0]["result"]["data"]):
+            
+            status_json = api_data[0]["result"]["data"]["json"]
+            
+            # Extract auth and world1 (Kezan) status
+            current_auth = "UP" if status_json.get("auth", False) else "DOWN"
+            current_kezan = "UP" if status_json.get("world1", False) else "DOWN"
+            
+        else:
+            print("⚠️  Unexpected API response structure")
             return False
         
-        # Find the start and end of this div
-        grid_div_start = page_content.rfind('<div', 0, grid_start)
-        if grid_div_start == -1:
-            print("⚠️  Could not find start of grid container div")
-            return False
-        
-        # Find the matching closing div (this is tricky, but we'll search for a reasonable boundary)
-        # We'll search within a reasonable range after the grid start
-        search_content = page_content[grid_div_start:grid_div_start + 50000]  # Limit search to 50KB
-        
-        # Parse Auth Server status within the grid container
-        auth_server_pos = search_content.find(AUTH_STATUS)
-        if auth_server_pos != -1:
-            # Look for "Last online" after the server name
-            search_start = auth_server_pos
-            last_online_pos = search_content.find("Last online", search_start)
-            if last_online_pos != -1:
-                # Find the next <p> tag after "Last online"
-                next_p_start = search_content.find("<p>", last_online_pos)
-                if next_p_start != -1:
-                    next_p_end = search_content.find("</p>", next_p_start)
-                    if next_p_end != -1:
-                        status_content = search_content[next_p_start + 3:next_p_end].strip().lower()
-                        if "now" in status_content:
-                            current_auth = "UP"
-                        else:
-                            current_auth = "DOWN"
-        
-        # Parse Kezan Server status within the grid container
-        kezan_server_pos = search_content.find(KEZAN_STATUS)
-        if kezan_server_pos != -1:
-            # Look for "Last online" after the server name
-            search_start = kezan_server_pos
-            last_online_pos = search_content.find("Last online", search_start)
-            if last_online_pos != -1:
-                # Find the next <p> tag after "Last online"
-                next_p_start = search_content.find("<p>", last_online_pos)
-                if next_p_start != -1:
-                    next_p_end = search_content.find("</p>", next_p_start)
-                    if next_p_end != -1:
-                        status_content = search_content[next_p_start + 3:next_p_end].strip().lower()
-                        if "now" in status_content:
-                            current_kezan = "UP"
-                        else:
-                            current_kezan = "DOWN"
-        
-        print(f"🔍 Current status - Auth: {current_auth}, Kezan: {current_kezan}")
+        current_time = datetime.now().strftime("%H:%M:%S")
+        print(f"🔍 [{current_time}] Current status - Auth: {current_auth}, Kezan: {current_kezan}")
         
         # Check if we could parse both statuses
         if current_auth is None or current_kezan is None:
-            print("⚠️  Could not parse server status from webpage")
+            print("⚠️  Could not parse server status from API")
             return False
         
         # Initialize previous values if they're None
